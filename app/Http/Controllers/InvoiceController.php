@@ -10,11 +10,13 @@ class InvoiceController extends Controller
 {
     public function printInvoice(Request $request)
     {
-        $invoiceName = str_replace('https://astana.sf-kiosk.kz/storage/invoices/', '', $request->invoiceUrl);
+        $filePath = parse_url($request->invoiceUrl, PHP_URL_PATH);
+        $parts = explode("/", $filePath);
+        $invoiceName = end($parts);
         Storage::disk('public')->put("/invoices/$invoiceName", file_get_contents($request->invoiceUrl));
 
         $printJob = Printing::newPrintTask()
-            ->printer('ipp://127.0.0.1:631/printers/FieryPrinter')
+            ->printer(env('CUPS_PRINTER_ID'))
             ->file(storage_path() . "/app/public/invoices/$invoiceName")
             ->send();
 
